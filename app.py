@@ -9,8 +9,11 @@ import json
 class MusicPlayer:
     def __init__(self, root):
         self.root = root
-        self.root.title("Rose Music Player")
+        self.root.title("Steel Music Player")
         self.root.geometry("500x400")
+
+        root.tk.call("source", "azure.tcl")
+        root.tk.call("set_theme", "dark")
 
         # MPV Media Player
         self.player = mpv.MPV(ytdl=True, input_default_bindings=True, input_vo_keyboard=True, video=False)
@@ -41,44 +44,50 @@ class MusicPlayer:
             self.playlist_titles = list(self.playlist.keys())  # Extract keys for display in ComboBox
 
     def create_widgets(self):
-        # Set a background color for the main window
-        self.root.configure(bg="#0f0f0f")
-
         # Frame for Playlist selection
-        playlist_frame = tk.Frame(self.root, bg="#0f0f0f")
+        playlist_frame = ttk.Frame(self.root)
         playlist_frame.pack(pady=10)
 
-        self.playlist_combobox = ttk.Combobox(playlist_frame, values=self.playlist_titles, width=50, font=("Arial", 12))
+        self.playlist_combobox = ttk.Combobox(playlist_frame, values=self.playlist_titles, width=50)
         self.playlist_combobox.pack(side=tk.LEFT, padx=(5, 0))
         self.playlist_combobox.bind("<<ComboboxSelected>>", self.load_selected_playlist)
 
         # Search Bar for filtering tracks
-        search_frame = tk.Frame(self.root, bg="#0f0f0f")
+        search_frame = ttk.Frame(self.root)
         search_frame.pack(pady=10)
 
-        self.filter_entry = tk.Entry(search_frame, bg="#181818", fg="white", width=50, font=("Arial", 12))
+        self.filter_entry = ttk.Entry(search_frame, width=50)
         self.filter_entry.pack(side=tk.LEFT, padx=(5, 0))
         self.filter_entry.bind("<KeyRelease>", self.filter_tracks)
 
         # Playlist Listbox
-        self.playlist_box = tk.Listbox(self.root, height=10, width=50, font=("Arial", 12), bg="#181818", fg="white", selectbackground="red")
-        self.playlist_box.pack(pady=10, fill=tk.Y, expand=True)
+        playlist_box_frame = ttk.Frame(self.root)
+        playlist_box_frame.pack(pady=10, fill=tk.Y, expand=True)
+        self.playlist_box = tk.Listbox(playlist_box_frame, height=10, width=60, bg="#161616", fg="white", selectbackground="#007fff")
+        self.playlist_box.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
         self.playlist_box.bind("<Double-Button-1>", self.select_track)
 
+        # Scrollbar
+        self.scrollbar = ttk.Scrollbar(playlist_box_frame)
+        self.scrollbar.pack(side=tk.RIGHT, fill=tk.BOTH, expand=True)
+
+        self.playlist_box.config(yscrollcommand = self.scrollbar.set)
+        self.scrollbar.config(command = self.playlist_box.yview)
+
         # Control Frame for Play/Pause, Volume, and Seek
-        controls_frame = tk.Frame(self.root, bg="#0f0f0f")
+        controls_frame = tk.Frame(self.root)
         controls_frame.pack(pady=10)
 
-        self.play_button = tk.Button(controls_frame, text="Play", command=self.toggle_play, bg="red", fg="white", font=("Arial", 12))
+        self.play_button = ttk.Button(controls_frame, text="Play", command=self.toggle_play)
         self.play_button.pack(side=tk.LEFT, padx=(5, 0))
 
         # Volume Slider
-        self.volume_slider = tk.Scale(controls_frame, from_=0, to=100, command=self.set_volume, orient='horizontal', label="Volume", bg="#0f0f0f", fg="white", font=("Arial", 12))
+        self.volume_slider = ttk.Scale(controls_frame, from_=0, to=100, command=self.set_volume, orient='horizontal')
         self.volume_slider.set(self.current_volume)
         self.volume_slider.pack(side=tk.LEFT, padx=(10, 0))
 
         # Seek Slider
-        self.seek_slider = tk.Scale(controls_frame, from_=0, to=100, orient='horizontal', label="Seek", bg="#0f0f0f", fg="white", font=("Arial", 12), length=240)
+        self.seek_slider = ttk.Scale(controls_frame, from_=0, to=100, orient='horizontal', length=240)
         self.seek_slider.pack(side=tk.LEFT, padx=(10, 0), fill=tk.X, expand=True)
 
         # Bind seek slider events
@@ -186,7 +195,7 @@ class MusicPlayer:
             self.play_track()
 
     def set_volume(self, volume_level):
-        volume = int(volume_level)
+        volume = int(float(volume_level))
         self.player.volume = volume
 
 # Create and start the Tkinter app
